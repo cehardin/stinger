@@ -1,0 +1,20 @@
+
+.clear {
+    clear: both;
+}
+
+.stinger-view-container {
+    width: 99%;
+    height: 49%;
+}
+
+.stinger-view {
+    float: left;
+    width: 49%;
+}
+
+.stinger-view canvas {
+    width: 100%;
+}
+
+
