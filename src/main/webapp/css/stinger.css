@@ -11,6 +11,7 @@
 .stinger-view {
     float: left;
     width: 49%;
+    border-style: ridge;
 }
 
 .stinger-view canvas {

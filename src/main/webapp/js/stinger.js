@@ -1,3 +1,4 @@
+'use strict';
 var wireframe = false;
 var dimensionsLength = 20000;
 var gravityImpulse = -9.81;
@@ -43,14 +44,14 @@ var createSun = function () {
 
     return light;
 };
-var createView = function (domId, width, height) {
+var createView = function (domId) {
+    var domIdQuery = "#" + domId;
+    var width = $(domIdQuery).width();
+    var height = $(domIdQuery).height();
     var view = {
-        domId: domId,
-        width: width,
-        height: height,
         camera: new THREE.PerspectiveCamera(75, width / height, 0.1, 3 * dimensionsLength),
         scene: new THREE.Scene(),
-        renderer: new THREE.WebGLRenderer(),
+        renderer: new THREE.WebGLRenderer({canvas : document.getElementById(domId), antialias : true}),
         ground: createGround(),
         sky: createSky(),
         sun: createSun(),
@@ -59,6 +60,7 @@ var createView = function (domId, width, height) {
         missileVector: new THREE.Vector3(0, 1, -1),
         motorOnTime: 0
     };
+    
 
     view.scene.add(view.ground);
     view.scene.add(view.sky);
@@ -71,8 +73,8 @@ var createView = function (domId, width, height) {
     view.missileVector.normalize();
 
     view.missileVector.setLength(1);
-
-    $("#" + view.domId).append(view.renderer.domElement);
+    
+    view.renderer.setSize(width, height);
 
     return view;
 };
@@ -83,8 +85,8 @@ $(function () {
     var frames = 0;
 
     var views = {
-        launcherToTarget: createView("view-launcher-to-target", window.innerWidth / 2, window.innerHeight),
-        targetToLauncher: createView("view-target-to-launcher", window.innerWidth / 2, window.innerHeight)
+        launcherToTarget: createView("view-launcher-to-target"),
+        targetToLauncher: createView("view-target-to-launcher")
     };
     var animateLauncherToTargetCamera = function (view) {
         view.camera.position.setZ(0);
@@ -103,16 +105,14 @@ $(function () {
         return "(" + vector.x + ", " + vector.y + ", " + vector.z + ")";
     }
     var animateMissile = function (view, delta) {
-        'use strict';
         var missilePosition = view.missile.position;
         if (missilePosition.y >= 0) {
-            var deltaSquared = Math.pow(delta, 2.0);
-            var deltaGravityImpulse = gravityImpulse * deltaSquared;
+            var deltaGravityImpulse = gravityImpulse * delta;
             var gravityVector = new THREE.Vector3(0, deltaGravityImpulse, 0);
             var motorOn = view.motorOnTime <= maxMotorOnTime;
             
             if (motorOn) {
-                var deltaMotorImpulse = motorImpulse * deltaSquared;
+                var deltaMotorImpulse = motorImpulse * delta;
                 var motorVector = new THREE.Vector3(0, 1, -1);
                 
                 motorVector.setLength(deltaMotorImpulse);
