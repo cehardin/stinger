@@ -51,7 +51,7 @@ var createView = function (domId) {
     var view = {
         camera: new THREE.PerspectiveCamera(75, width / height, 0.1, 3 * dimensionsLength),
         scene: new THREE.Scene(),
-        renderer: new THREE.WebGLRenderer({canvas : document.getElementById(domId), antialias : true}),
+        renderer: new THREE.WebGLRenderer({canvas: document.getElementById(domId), antialias: true}),
         ground: createGround(),
         sky: createSky(),
         sun: createSun(),
@@ -60,7 +60,7 @@ var createView = function (domId) {
         missileVector: new THREE.Vector3(0, 1, -1),
         motorOnTime: 0
     };
-    
+
 
     view.scene.add(view.ground);
     view.scene.add(view.sky);
@@ -73,7 +73,7 @@ var createView = function (domId) {
     view.missileVector.normalize();
 
     view.missileVector.setLength(1);
-    
+
     view.renderer.setSize(width, height);
 
     return view;
@@ -83,6 +83,7 @@ var createView = function (domId) {
 $(function () {
     var clock = new THREE.Clock();
     var frames = 0;
+    var launchMissile = false;
 
     var views = {
         launcherToTarget: createView("view-launcher-to-target"),
@@ -110,20 +111,20 @@ $(function () {
             var deltaGravityImpulse = gravityImpulse * delta;
             var gravityVector = new THREE.Vector3(0, deltaGravityImpulse, 0);
             var motorOn = view.motorOnTime <= maxMotorOnTime;
-            
+
             if (motorOn) {
                 var deltaMotorImpulse = motorImpulse * delta;
                 var motorVector = new THREE.Vector3(0, 1, -1);
-                
+
                 motorVector.setLength(deltaMotorImpulse);
-                
+
                 missilePosition.add(motorVector);
             }
 
             view.motorOnTime += delta;
             missilePosition.add(gravityVector);
 
-            console.log("Missile: MotorOn=" + motorOn + "; " + vectorToString(missilePosition));
+//            console.log("Missile: MotorOn=" + motorOn + "; " + vectorToString(missilePosition));
         }
     };
     var animate = function (delta) {
@@ -153,6 +154,16 @@ $(function () {
 
         requestAnimationFrame(render);
     };
+
+    $("*").keydown(function (event) {
+        if (event.which === 32) {
+            event.preventDefault();
+            if (launchMissile === false) {
+                console.log("Launching missile!");
+                launchMissile = true;
+            }
+        }
+    });
 
     requestAnimationFrame(render);
 });
