@@ -2,7 +2,7 @@
 var wireframe = false;
 var dimensionsLength = 20000;
 var gravityImpulse = -9.81;
-var motorImpulse = -gravityImpulse * 5; //250.0
+var motorImpulse = 250.0
 var maxMotorOnTime = 3;
 var createTarget = function () {
     var geometry = new THREE.CylinderGeometry(1, 3, 10, 16, 16, false);
@@ -12,11 +12,13 @@ var createTarget = function () {
     return mesh;
 };
 var createMissile = function () {
+    var container = new THREE.Object3D();
     var geometry = new THREE.CylinderGeometry(0.08, 0.04, 2, 16, 16, false);
     var material = new THREE.MeshLambertMaterial({color: 0xFF0000, side: THREE.FrontSide, wireframe: wireframe});
     var mesh = new THREE.Mesh(geometry, material);
 
-    return mesh;
+    container.add(mesh);
+    return container;
 };
 var createGround = function () {
     var geometry = new THREE.PlaneGeometry(dimensionsLength, dimensionsLength, 10, 10);
@@ -87,15 +89,28 @@ $(function () {
 
     var views = {
         launcherToTarget: createView("view-launcher-to-target"),
-        targetToLauncher: createView("view-target-to-launcher")
+        targetToLauncher: createView("view-target-to-launcher"),
+        missileTotarget: createView("view-missile-to-target"),
+        targetToMissile: createView("view-target-to-missile")
     };
     var animateLauncherToTargetCamera = function (view) {
         view.camera.position.setZ(0);
-        view.camera.position.setY(2);
+        view.camera.position.setY(0);
         view.camera.lookAt(views.launcherToTarget.target.position);
     };
     var animateTargetToLauncherCamera = function (view) {
+        view.camera.position.setX(view.target.position.x + 10);
+        view.camera.position.setY(view.target.position.y + 20);
+        view.camera.position.setZ(view.target.position.z - 20);
 
+        view.camera.lookAt(views.launcherToTarget.target.position);
+    };
+    var animateMissileToTargetCamera = function (view) {
+        view.camera.position.setZ(0);
+        view.camera.position.setY(0);
+        view.camera.lookAt(views.launcherToTarget.target.position);
+    };
+    var animateTargetToMissileCamera = function (view) {
         view.camera.position.setX(view.target.position.x + 10);
         view.camera.position.setY(view.target.position.y + 20);
         view.camera.position.setZ(view.target.position.z - 20);
@@ -106,25 +121,49 @@ $(function () {
         return "(" + vector.x + ", " + vector.y + ", " + vector.z + ")";
     }
     var animateMissile = function (view, delta) {
-        var missilePosition = view.missile.position;
-        if (missilePosition.y >= 0) {
-            var deltaGravityImpulse = gravityImpulse * delta;
-            var gravityVector = new THREE.Vector3(0, deltaGravityImpulse, 0);
-            var motorOn = view.motorOnTime <= maxMotorOnTime;
 
-            if (motorOn) {
-                var deltaMotorImpulse = motorImpulse * delta;
-                var motorVector = new THREE.Vector3(0, 1, -1);
+        if (launchMissile) {
+            var missileOrientation = new THREE.Vector3();
+            var missilePosition = view.missile.position;
+            if (missilePosition.y >= 0) {
+                var deltaGravityImpulse = gravityImpulse * delta;
+                var gravityVector = new THREE.Vector3(0, deltaGravityImpulse, 0);
+                var motorOn = view.motorOnTime <= maxMotorOnTime;
 
-                motorVector.setLength(deltaMotorImpulse);
+                if (motorOn) {
+                    var deltaMotorImpulse = motorImpulse * delta;
+                    var motorVector = new THREE.Vector3(0, 1, -1);
 
-                missilePosition.add(motorVector);
+                    motorVector.setLength(deltaMotorImpulse);
+
+                    missilePosition.add(motorVector);
+                    missileOrientation.add(motorVector.normalize());
+                }
+
+                view.motorOnTime += delta;
+                missilePosition.add(gravityVector);
+                missileOrientation.add(gravityVector.normalize());
+//            console.log("Missile: MotorOn=" + motorOn + "; " + vectorToString(missilePosition));
             }
 
-            view.motorOnTime += delta;
-            missilePosition.add(gravityVector);
+            //point missile along it's vector
+            {
+                var target = view.target;
+                var missile = view.missile;
+                var xAngle, yAngle, zAngle;
 
-//            console.log("Missile: MotorOn=" + motorOn + "; " + vectorToString(missilePosition));
+                missileOrientation = missileOrientation.normalize();
+                xAngle = missileOrientation.angleTo(new THREE.Vector3(1, 0, 0));
+                yAngle = missileOrientation.angleTo(new THREE.Vector3(0, 1, 0));
+                zAngle = missileOrientation.angleTo(new THREE.Vector3(0, 0, 0));
+
+                missile.children.forEach(function (value) {
+                    value.rotation.set(1, 1, 1);
+                });
+            }
+        }
+        else {
+            
         }
     };
     var animate = function (delta) {
@@ -134,7 +173,8 @@ $(function () {
 
         animateLauncherToTargetCamera(views.launcherToTarget);
         animateTargetToLauncherCamera(views.targetToLauncher);
-
+        animateMissileToTargetCamera(views.missileTotarget);
+        animateTargetToMissileCamera(views.targetToMissile);
     };
     var render = function () {
         var delta = clock.getDelta();
