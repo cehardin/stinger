@@ -5,7 +5,7 @@
 
 .stinger-view-container {
     width: 99%;
-    height: 49%;
+    height: 44%;
 }
 
 .stinger-view {
@@ -16,6 +16,17 @@
 
 .stinger-view canvas {
     width: 100%;
+}
+
+.stinger-info-container {
+    width: 99%;
+    height: 9%;
+}
+
+.stinger-info-column {
+    float: left;
+    width: 49%;
+    height: 9%;
 }
 
 
