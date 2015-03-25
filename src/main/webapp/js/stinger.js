@@ -29,9 +29,9 @@ var createTexture = function(textureFile) {
     return texture;  
 };
 var createGroundTexture = function() {
-    var texture = createTexture("ground.jpg");
+    var texture = createTexture("ground2.jpg");
 
-    texture.repeat.set(20000,20000);
+    texture.repeat.set(100,100);
     
     return texture;  
 };
@@ -94,7 +94,7 @@ var createView = function (domId) {
     view.scene.add(view.target);
     view.scene.add(view.missile);
 
-    view.target.position.set(0, 500, -1000);
+    view.target.position.set(0, 1000, -3000);
     view.missile.position.set(0, 0.5, -3);
     view.missileVector.normalize();
 
@@ -133,7 +133,7 @@ $(function () {
         view.camera.position.setX(view.missile.position.x);
         view.camera.position.setY(view.missile.position.y);
         view.camera.position.setZ(view.missile.position.z + 2);
-//        view.camera.lookAt(view.target.position);
+        view.camera.lookAt(view.target.position);
     };
     var animateTargetToMissileCamera = function (view) {
         view.camera.position.setX(view.target.position.x + 10);
@@ -153,14 +153,14 @@ $(function () {
             var missileVector = view.missileVector;
             
             if (missilePosition.y >= 0) {
-                var deltaGravityImpulse = gravityImpulse * delta;
+                var deltaGravityImpulse = gravityImpulse * delta * delta;
                 var gravityVector = new THREE.Vector3(0, deltaGravityImpulse, 0);
                 var motorOn = view.motorOnTime <= maxMotorOnTime;
 
                 missileVector.add(gravityVector);
                 
                 if (motorOn) {
-                    var deltaMotorImpulse = motorImpulse * delta;
+                    var deltaMotorImpulse = motorImpulse * delta * delta;
                     var motorVector = new THREE.Vector3(0, 1, -1);
 
                     motorVector.setLength(deltaMotorImpulse);
