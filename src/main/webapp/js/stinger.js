@@ -77,7 +77,7 @@ var createView = function (domId) {
     var view = {
         camera: new THREE.PerspectiveCamera(75, width / height, 0.1, 3 * dimensionsLength),
         scene: new THREE.Scene(),
-        renderer: new THREE.WebGLRenderer({canvas: document.getElementById(domId), antialias: true}),
+        renderer: new THREE.WebGLRenderer({canvas: document.getElementById(domId), antialias: true, alpha : true}),
         ground: createGround(),
         sky: createSky(),
         sun: createSun(),
@@ -85,7 +85,9 @@ var createView = function (domId) {
         missile: createMissile(),
         missileVector: new THREE.Vector3(0, 0, 0),
         motorOnTime: 0.0,
-        missileSpeed: 0.0
+        missileSpeed: 0.0,
+        smoke : [],
+        sinceSmoke : 0.0
     };
 
 
@@ -160,6 +162,34 @@ $(function () {
             var missileVectorOrientation;
             var missileVectorDifference;
 
+            //update elapsed time and remove old mesh
+            _.forEach(view.smoke, function(s) {
+               s.elapsed += delta; 
+               if(s.prevMesh !== null) {
+                   view.scene.remove(s.prevMesh);
+               }
+            });
+            
+            //filter old smoke
+            view.smoke = _.filter(view.smoke, function(s) {
+               return s.elapsed < 20; 
+            });
+            
+            //create new smoke objects
+            _.forEach(view.smoke, function(s) {
+                var radius = s.elapsed;
+                var opacity = 1.0 / radius;
+                var geometry = new THREE.SphereGeometry(radius);
+                var material = new THREE.MeshBasicMaterial({color : 0x999999});
+                var mesh = new THREE.Mesh(geometry, material);
+                
+                material.opacity = opacity;
+                
+                mesh.position.copy(s.position.clone());
+                view.scene.add(mesh);
+                s.prevMesh = mesh;
+            });
+            
             if (missilePosition.y >= 0) {
                 var deltaGravityImpulse = gravityImpulse * delta * delta;
                 var gravityVector = new THREE.Vector3(0, deltaGravityImpulse, 0);
@@ -178,6 +208,15 @@ $(function () {
 
                     missileVector.add(motorVector);
                     missileOrientation.add(motorVector.normalize());
+                    view.sinceSmoke += delta;
+                    if(view.sinceSmoke > 0.05) {
+                        view.smoke.push( {
+                            position : missilePosition.clone(),
+                            elapsed : 0,
+                            prevMesh : null
+                        });
+                        view.sinceSmoke = 0.0;
+                }
                 }
 
                 view.motorOnTime += delta;
@@ -191,9 +230,11 @@ $(function () {
             missileVectorOrientation = missileVector.clone().normalize();
             missileVectorDifference = vectorToTarget.clone(missileVectorOrientation).normalize();
 
-            view.missile.children.forEach(function (value) {
-                value.rotation.set(vectorToTarget.x, vectorToTarget.y, vectorToTarget.z);
-            });
+//            view.missile.children[0].rotation.setFromVector3(vectorToTarget);
+//            view.missile.rotation.setFromVector3(new THREE.Vector3(Math.PI, 0, 0));
+//            view.missile.children.forEach(function (value) {
+//                value.rotation.setFromVector3(vectorToTarget);
+//            });
         
 
             view.missileSpeed = view.missileSpeed * 0.90 + (missileVector.length() / delta) * 0.10;
