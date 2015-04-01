@@ -115,7 +115,7 @@ var createView = function (domId) {
 // once everything is loaded, we run our Three.js stuff.
 $(function () {
     var clock = new THREE.Clock();
-    var frames = 0;
+    var averageDelta = 0.0;
     var launchMissile = false;
 
     var views = {
@@ -165,7 +165,8 @@ $(function () {
 //        var x = radius * Math.sin(v);
 //        var y = radius * Math.cos(v);
 //        var z = -3000;
-        var x = 1000;// - 200 * elapsed;
+        var speed = -10; //-200
+        var x = 1000 + speed * elapsed;
         var y = 1000;
         var z = -2000;
 
@@ -226,7 +227,7 @@ $(function () {
 
                 if (smokeOn) {
                     view.sinceSmoke += delta;
-                    if (view.sinceSmoke > 0.01) {
+                    if (view.sinceSmoke > 0.05) {
                         view.smoke.push({
                             position: missilePosition.clone(),
                             elapsed: 0,
@@ -280,12 +281,16 @@ $(function () {
         var distanceToLauncer = Math.floor(Math.abs(missilePosition.length()));
         var distanceToTarget = Math.floor(Math.abs(targetPosition.clone().sub(missilePosition).length()));
         var missileFlightTime = Math.floor(view.motorOnTime);
-
+        var targetAltitude = Math.floor(targetPosition.y);
+        var framesPerSecond = Math.round(1.0 / averageDelta);
+        
         $("#missile-altitude").text(missileAltitude);
         $("#missile-speed").text(missileSpeed);
         $("#missile-distance-launcher").text(distanceToLauncer);
         $("#missile-distance-target").text(distanceToTarget);
         $("#missile-flight-time").text(missileFlightTime);
+        $("#target-altitude").text(targetAltitude);
+        $("#frames-per-second").text(framesPerSecond);
     }
     var animate = function (delta) {
         _.each(_.values(views), function (view) {
@@ -298,20 +303,14 @@ $(function () {
         animateTargetToLauncherCamera(views.targetToLauncher);
         animateMissileToTargetCamera(views.missileTotarget);
         animateTargetToMissileCamera(views.targetToMissile);
-
-        updateInfo(views.launcherToTarget);
     };
     var render = function () {
         var delta = clock.getDelta();
 
-
-        if ((++frames % 120) === 0) {
-            var fps = 1.0 / delta;
-
-//            console.log("FPS : " + fps);
-        }
+        averageDelta = averageDelta * 0.9 + delta * 0.1;
 
         animate(delta);
+        updateInfo(views.launcherToTarget);
 
         _.each(_.values(views), function (view) {
             view.renderer.render(view.scene, view.camera);
