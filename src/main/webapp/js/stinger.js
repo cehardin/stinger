@@ -6,16 +6,16 @@ var motorImpulse = 250.0;
 var maxMotorOnTime = 3;
 var createTarget = function () {
     var geometry = new THREE.CylinderGeometry(1, 3, 10, 16, 16, false);
-    var material = new THREE.MeshLambertMaterial({color: 0xFFFFFF, side: THREE.FrontSide, wireframe: wireframe});
+    var material = new THREE.MeshPhongMaterial({color: 0xFF0000, side: THREE.FrontSide, wireframe: wireframe});
     var mesh = new THREE.Mesh(geometry, material);
 
-    mesh.rotateOnAxis(new THREE.Vector3(0,0,1), -Math.PI / 2);
+    mesh.rotateOnAxis(new THREE.Vector3(0,0,1), Math.PI / 2);
     
     return mesh;
 };
 var createMissile = function () {
     var geometry = new THREE.CylinderGeometry(0.08, 0.04, 2, 16, 16, false);
-    var material = new THREE.MeshLambertMaterial({color: 0x009922, side: THREE.FrontSide, wireframe: wireframe});
+    var material = new THREE.MeshLambertMaterial({color: 0xFF0000, side: THREE.FrontSide, wireframe: wireframe});
     var mesh = new THREE.Mesh(geometry, material);
 
     mesh.rotateOnAxis(new THREE.Vector3(1,0,0), -Math.PI / 2);
@@ -30,9 +30,9 @@ var createTexture = function (textureFile) {
     return texture;
 };
 var createGroundTexture = function () {
-    var texture = createTexture("ground2.png");
+    var texture = createTexture("ground3.jpg");
 
-    texture.repeat.set(100, 100);
+    texture.repeat.set(50, 50);
 
     return texture;
 };
@@ -89,6 +89,7 @@ var createView = function (domId) {
         missileExploded: false,
         missileExplosion: null,
         missileSpeed: 0.0,
+        targetSpeed: 0.0,
         smoke: [],
         sinceSmoke: 0.0,
         elapsedSeconds: 0.0
@@ -98,6 +99,7 @@ var createView = function (domId) {
     view.scene.add(view.ground);
     view.scene.add(view.sky);
     view.scene.add(view.sun);
+    view.scene.add(new THREE.AmbientLight(0x808080));
     view.scene.add(view.target);
     view.scene.add(view.missile);
 
@@ -118,6 +120,8 @@ $(function () {
     var averageDelta = 0.0;
     var launchMissile = false;
     var minimumDistance = 9999999999999;
+    var xLead = 0;
+    var yLead = 0;
 
     var views = {
         launcherToTarget: createView("view-launcher-to-target"),
@@ -126,33 +130,29 @@ $(function () {
         targetToMissile: createView("view-target-to-missile")
     };
     var animateLauncherToTargetCamera = function (view) {
-        var x = view.target.position.x >= 0 ? 2 : -2;
-        view.camera.position.setX(x);
-        view.camera.position.setY(1);
-        view.camera.position.setZ(4);
+        view.camera.position.setX(0);
+        view.camera.position.setY(2);
+        view.camera.position.setZ(0);
         view.camera.lookAt(view.target.position);
     };
     var animateTargetToLauncherCamera = function (view) {
-        var x = view.target.position.x >= 0 ? -2 : 2;
-        view.camera.position.setX(view.target.position.x + x);
-        view.camera.position.setY(view.target.position.y + 2);
-        view.camera.position.setZ(view.target.position.z - 10);
+        view.camera.position.setX(view.target.position.x + 0);
+        view.camera.position.setY(view.target.position.y + 10);
+        view.camera.position.setZ(view.target.position.z - 15);
 
         view.camera.lookAt(new THREE.Vector3(0, 0, 0));
     };
     var animateMissileToTargetCamera = function (view) {
-        var z = view.missile.position.z > view.target.position.z ? 2 : -2;
         view.camera.position.setX(view.missile.position.x);
         view.camera.position.setY(view.missile.position.y);
-        view.camera.position.setZ(view.missile.position.z + z);
+        view.camera.position.setZ(view.missile.position.z);
 
         view.camera.lookAt(view.target.position);
     };
     var animateTargetToMissileCamera = function (view) {
-        var z = view.missile.position.z > view.target.position.z ? -10 : 10;
-        view.camera.position.setX(view.target.position.x + 10);
-        view.camera.position.setY(view.target.position.y + 10);
-        view.camera.position.setZ(view.target.position.z + z);
+        view.camera.position.setX(view.target.position.x + 0);
+        view.camera.position.setY(view.target.position.y + 20);
+        view.camera.position.setZ(view.target.position.z - 45);
 
         view.camera.lookAt(view.missile.position);
     };
@@ -167,11 +167,12 @@ $(function () {
 //        var y = radius * Math.cos(v);
 //        var z = -3000;
         var speed = -200; //-200
-        var x = 1000 + speed * elapsed;
-        var y = 2000;
-        var z = -4000;
+        var x = 4000 + speed * elapsed;
+        var y = 1000;
+        var z = -2000;
 
         view.target.position.set(x, y, z);
+        view.targetSpeed = Math.abs(speed);
     }
     var animateMissile = function (view, delta) {
 
@@ -183,7 +184,7 @@ $(function () {
             opacity = s.elapsed <= 1.0 ? 1.0 : 1.0 / s.elapsed * 4.0;
 
             if (s.mesh === null) {
-                var geometry = new THREE.SphereGeometry(1.0, 3, 2);
+                var geometry = new THREE.SphereGeometry(2.0, 3, 2);
                 var material = new THREE.MeshLambertMaterial({color: 0xCCCCCC});
                 var mesh = new THREE.Mesh(geometry, material);
 
@@ -232,23 +233,16 @@ $(function () {
                     }
                 }
 
-                //steer
+                //steer and lead target
                 {
                     var length = missileVector.length();
                     var vector = targetPosition.clone().sub(missilePosition).normalize();
-
-                    missileVector.copy(vector.setLength(length));
-                }
-                
-                //apply lead
-                {
-                    var length = missileVector.length();
-                    var vector = missileVector.normalize();
-                    var zAngle = THREE.Math.degToRad(10);
-                    var yAngle = THREE.Math.degToRad(10);
-
-                    vector.applyAxisAngle(new THREE.Vector3(0, 0, 1), zAngle).normalize();
-                    vector.applyAxisAngle(new THREE.Vector3(0, 1, 0), yAngle).normalize();
+                    var xLeadRadians = THREE.Math.degToRad(xLead);
+                    var yLeadRadians = THREE.Math.degToRad(targetPosition.x > 0 ? yLead : -yLead);
+                    
+                    vector.applyAxisAngle(new THREE.Vector3(0, 1, 0), xLeadRadians).normalize();
+                    vector.applyAxisAngle(new THREE.Vector3(0, 0, 1), yLeadRadians).normalize();
+                    
                     missileVector.copy(vector.setLength(length));
                 }
 
@@ -292,7 +286,7 @@ $(function () {
         var missileFlightTime = Math.floor(view.motorOnTime);
         var targetAltitude = Math.floor(targetPosition.y);
         var framesPerSecond = Math.round(1.0 / averageDelta);
-        
+        var targetSpeed = Math.floor(view.targetSpeed);
         minimumDistance = Math.min(minimumDistance, distanceToTarget);
         
         $("#missile-altitude").text(missileAltitude);
@@ -302,7 +296,7 @@ $(function () {
         $("#missile-distance-target").text(distanceToTarget);
         
         $("#target-altitude").text(targetAltitude);
-        $("#min-distance").text(minimumDistance);
+        $("#target-speed").text(targetSpeed);
         
         $("#missile-flight-time").text(missileFlightTime);
         $("#frames-per-second").text(framesPerSecond);
@@ -333,7 +327,53 @@ $(function () {
 
         requestAnimationFrame(render);
     };
+    
+    
+    $("#lead-key-q").addClass("selected-lead");
+    xLead = 10;
+    yLead = 10;
+    
+    /**
+     * To apply lead and super-elevation
+     */
+    $("*").keydown(function(event) {
+        if(event.which === 83) {
+            $(".lead").removeClass("selected-lead");
+            $("#lead-key-s").addClass("selected-lead");
+            xLead = 0;
+            yLead = 0;
+        } else if(event.which === 81) {
+            $(".lead").removeClass("selected-lead");
+            $("#lead-key-q").addClass("selected-lead");
+            xLead = 10;
+            yLead = 10;
+        } else if(event.which === 87) {
+            $(".lead").removeClass("selected-lead");
+            $("#lead-key-w").addClass("selected-lead");
+            xLead = 0;
+            yLead = 10;
+        } else if(event.which === 69) {
+            $(".lead").removeClass("selected-lead");
+            $("#lead-key-e").addClass("selected-lead");
+            xLead = -10;
+            yLead = 10;
+        } else if(event.which === 65) {
+            $(".lead").removeClass("selected-lead");
+            $("#lead-key-a").addClass("selected-lead");
+            xLead = 10;
+            yLead = 0;
+        } else if(event.which === 68) {
+            $(".lead").removeClass("selected-lead");
+            $("#lead-key-d").addClass("selected-lead");
+            xLead = -10;
+            yLead = 0;
+        }
+    });
+    
 
+    /**
+     * To launch
+     */
     $("*").keydown(function (event) {
         if (event.which === 32) {
             event.preventDefault();
