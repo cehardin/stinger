@@ -3,24 +3,54 @@
     clear: both;
 }
 
+.stinger-top-container {
+/*    width: 99%;*/
+    height: 90%;
+}
+.stinger-views-container {
+    float: left;
+    width: 90%;
+    height: 100%;
+}
+
 .stinger-view-container {
-    width: 99%;
-    height: 44%;
+    width: 100%;
+    height: 100%;
 }
 
 .stinger-view {
     float: left;
-    width: 49%;
-    border-style: ridge;
+    width: 50%;
 }
 
 .stinger-view canvas {
     width: 100%;
 }
 
+.stinger-instructions-container {
+    float: left;
+    width: 10%;
+}
+
+.stinger-instructions-container table{
+    border-collapse: collapse;
+}
+
+.stinger-instructions-container table, th, td {
+    border: 1px solid black;
+}
+
+.lead {
+    
+}
+
+.selected-lead {
+    background: yellow;
+}
+
 .stinger-info-container {
-    width: 99%;
-    height: 9%;
+    width: 100%;
+    height: 10%;
 }
 
 .stinger-info-column {

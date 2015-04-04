@@ -12,21 +12,64 @@
     </head>
 
     <body>
-        <div class="stinger-view-container">
-            <div class="stinger-view">
-                <canvas id="view-launcher-to-target" ></canvas>
+        <div class="stinger-top-container">
+            <div class="stinger-views-container">
+                <div class="stinger-view-container">
+                    <div class="stinger-view">
+                        <canvas id="view-launcher-to-target" ></canvas>
+                    </div>
+                    <div class="stinger-view">
+                        <canvas id="view-target-to-launcher"></canvas>
+                    </div>
+                </div>
+                <div class="clear"></div>
+                <div class="stinger-view-container">
+                    <div class="stinger-view">
+                        <canvas id="view-missile-to-target" ></canvas>
+                    </div>
+                    <div class="stinger-view">
+                        <canvas id="view-target-to-missile"></canvas>
+                    </div>
+                </div>
+                <div class="clear"></div>
             </div>
-            <div class="stinger-view">
-                <canvas id="view-target-to-launcher"></canvas>
-            </div>
-            <div class="clear"></div>
-        </div>
-        <div class="stinger-view-container">
-            <div class="stinger-view">
-                <canvas id="view-missile-to-target" ></canvas>
-            </div>
-            <div class="stinger-view">
-                <canvas id="view-target-to-missile"></canvas>
+            <div class="stinger-instructions-container">
+                <div>Instructions:</div>
+                <div>Press the space bar to launch the missile!</div>
+                <div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Key</th>
+                                <th>Purpose</th>
+                            </tr>
+                        </thead>
+                        <tr id="lead-key-s" class='lead'>
+                            <td>'s'</td>
+                            <td>No leading or super-elevation</td>
+                        </tr>
+                        <tr id="lead-key-q" class='lead'>
+                            <td>'q'</td>
+                            <td>Super-elevate left (for targets going right-to-left)</td>
+                        </tr>
+                        <tr id="lead-key-w" class='lead'>
+                            <td>'w'</td>
+                            <td>Super-elevate center (for targets not moving left or right)</td>
+                        </tr>
+                        <tr id="lead-key-e" class='lead'>
+                            <td>'e'</td>
+                            <td>Super-elevate right (for targets going left-to-right)</td>
+                        </tr>
+                        <tr id="lead-key-a" class='lead'>
+                            <td>'a'</td>
+                            <td>Lead left (no super-elevation)</td>
+                        </tr>
+                        <tr id="lead-key-d" class='lead'>
+                            <td>'d'</td>
+                            <td>Lead right (no super-elevation)</td>
+                        </tr>
+                    </table>
+                </div>
             </div>
             <div class="clear"></div>
         </div>
@@ -35,6 +78,7 @@
                 <div><span>Missile Altitude (meters): </span><span id="missile-altitude"></span></div>
                 <div><span>Missile Speed (meters/second): </span><span id="missile-speed"></span></div>
             </div>
+
             <div class="stinger-info-column">
                 <div><span>Missile distance from launcher (meters): </span><span id="missile-distance-launcher"></span></div>
                 <div><span>Missile distance to target (meters): </span><span id="missile-distance-target"></span></div>
@@ -47,6 +91,7 @@
                 <div><span>Missile flight time (seconds): </span><span id="missile-flight-time"></span></div>
                 <div><span>Frames/second: </span><span id="frames-per-second"></span></div>
             </div>
+            <div class="clear"></div>
         </div>
     </body>
 </html>
