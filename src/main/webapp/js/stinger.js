@@ -167,7 +167,7 @@ $(function () {
 //        var y = radius * Math.cos(v);
 //        var z = -3000;
         var speed = -200; //-200
-        var x = 4000 + speed * elapsed;
+        var x = 6000 + speed * elapsed;
         var y = 1000;
         var z = -2000;
 
