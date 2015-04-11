@@ -2,7 +2,7 @@
 var wireframe = false;
 var dimensionsLength = 200000;
 var gravityImpulse = -9.81;
-var motorImpulse = 250.0;
+var motorImpulse = 300.0;
 var maxMotorOnTime = 3;
 var createTarget = function () {
     var geometry = new THREE.CylinderGeometry(1, 3, 10, 16, 16, false);
@@ -122,6 +122,11 @@ $(function () {
     var minimumDistance = 9999999999999;
     var xLead = 0;
     var yLead = 0;
+    var missileHit = false;
+    var targetHeight = 50 + Math.random() * 2000;
+    var targetStartX = 500 + Math.random() * 6000;
+    var targetY = -500 - Math.random() * 4000;
+    var targetSpeed = 100 + Math.random() * 300;
 
     var views = {
         launcherToTarget: createView("view-launcher-to-target"),
@@ -166,13 +171,15 @@ $(function () {
 //        var x = radius * Math.sin(v);
 //        var y = radius * Math.cos(v);
 //        var z = -3000;
-        var speed = -200; //-200
-        var x = 6000 + speed * elapsed;
-        var y = 1000;
-        var z = -2000;
+        var speed = -targetSpeed; //-200
+        var x = targetStartX + speed * elapsed;
+        var y = targetHeight;
+        var z = targetY;
 
-        view.target.position.set(x, y, z);
-        view.targetSpeed = Math.abs(speed);
+        if(!missileHit) {
+            view.target.position.set(x, y, z);
+            view.targetSpeed = Math.abs(speed);
+        }
     }
     var animateMissile = function (view, delta) {
 
@@ -184,7 +191,7 @@ $(function () {
             opacity = s.elapsed <= 1.0 ? 1.0 : 1.0 / s.elapsed * 4.0;
 
             if (s.mesh === null) {
-                var geometry = new THREE.SphereGeometry(2.0, 3, 2);
+                var geometry = new THREE.SphereGeometry(3.0);
                 var material = new THREE.MeshLambertMaterial({color: 0xCCCCCC});
                 var mesh = new THREE.Mesh(geometry, material);
 
@@ -253,7 +260,7 @@ $(function () {
                 view.missileSpeed = view.missileSpeed * 0.90 + (missileVector.length() / delta) * 0.10;
 
                 //missile explosion
-                if (explode && !view.missileExploded) {
+                if ((explode || missileHit) && !view.missileExploded) {
                     var geometry = new THREE.SphereGeometry(3.0);
                     var material = new THREE.MeshLambertMaterial({color: 0xFF0000, side : THREE.DoubleSide});
                     var mesh = new THREE.Mesh(geometry, material);
@@ -287,6 +294,10 @@ $(function () {
         var targetAltitude = Math.floor(targetPosition.y);
         var framesPerSecond = Math.round(1.0 / averageDelta);
         var targetSpeed = Math.floor(view.targetSpeed);
+        
+        if(launchMissile && distanceToTarget < 10) {
+            missileHit = true;
+        }
         minimumDistance = Math.min(minimumDistance, distanceToTarget);
         
         $("#missile-altitude").text(missileAltitude);
