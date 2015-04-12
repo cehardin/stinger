@@ -4,12 +4,36 @@ var dimensionsLength = 200000;
 var gravityImpulse = -9.81;
 var motorImpulse = 300.0;
 var maxMotorOnTime = 3;
+var DIRECTION_RIGHT_TO_LEFT = "RIGHT_TO_LEFT";
+var DIRECTION_LEFT_TO_RIGHT = "LEFT_TO_RIGHT";
+var DIRECTION_NEAR_TO_FAR = "NEAR_TO_FAR";
+var direction = function() {
+    var n = Math.random();
+    if(n <= (1.0/3.0)) {
+        return DIRECTION_RIGHT_TO_LEFT;
+    }
+    else if(n > (2.0/3.0)) {
+        return DIRECTION_LEFT_TO_RIGHT;
+    }
+    else {
+        return DIRECTION_NEAR_TO_FAR;
+    }
+}();
 var createTarget = function () {
     var geometry = new THREE.CylinderGeometry(1, 3, 10, 16, 16, false);
     var material = new THREE.MeshPhongMaterial({color: 0xFF0000, side: THREE.FrontSide, wireframe: wireframe});
     var mesh = new THREE.Mesh(geometry, material);
 
-    mesh.rotateOnAxis(new THREE.Vector3(0,0,1), Math.PI / 2);
+    if(direction === DIRECTION_RIGHT_TO_LEFT) {
+        mesh.rotateOnAxis(new THREE.Vector3(0,0,1), Math.PI / 2);
+    }
+    else if(direction === DIRECTION_LEFT_TO_RIGHT) {
+        mesh.rotateOnAxis(new THREE.Vector3(0,0,1), -Math.PI / 2);
+    }
+    else {
+        mesh.rotateOnAxis(new THREE.Vector3(0,0,1), Math.PI / 2);
+        mesh.rotateOnAxis(new THREE.Vector3(1,0,0), -Math.PI / 2);
+    }
     
     return mesh;
 };
@@ -124,9 +148,30 @@ $(function () {
     var yLead = 0;
     var missileHit = false;
     var targetHeight = 50 + Math.random() * 2000;
-    var targetStartX = 500 + Math.random() * 6000;
-    var targetY = -500 - Math.random() * 4000;
     var targetSpeed = 100 + Math.random() * 300;
+    var targetStartX = function() {
+        if(direction === DIRECTION_LEFT_TO_RIGHT) {
+            return -500 - Math.random() * 6000;
+        }
+        else if(direction === DIRECTION_RIGHT_TO_LEFT) {
+            return 500 + Math.random() * 6000;
+        }
+        else {
+            return  Math.random() * 500;
+        }
+    }();
+    var targetStartY = function() {
+        if(direction === DIRECTION_LEFT_TO_RIGHT) {
+            return -500 - Math.random() * 4000;
+        }
+        else if(direction === DIRECTION_RIGHT_TO_LEFT) {
+            return -500 - Math.random() * 4000;
+        }
+        else {
+            return -500 - Math.random() * 750;
+        }
+    }();
+    
 
     var views = {
         launcherToTarget: createView("view-launcher-to-target"),
@@ -161,24 +206,29 @@ $(function () {
 
         view.camera.lookAt(view.missile.position);
     };
-    var vectorToString = function (vector) {
-        return "(" + vector.x + ", " + vector.y + ", " + vector.z + ")";
-    }
     var animateTarget = function (view, delta) {
         var elapsed = view.elapsedSeconds;
-//        var radius = 2000.0;
-//        var v = (elapsed % 60) / 60;
-//        var x = radius * Math.sin(v);
-//        var y = radius * Math.cos(v);
-//        var z = -3000;
-        var speed = -targetSpeed; //-200
-        var x = targetStartX + speed * elapsed;
-        var y = targetHeight;
-        var z = targetY;
+        var x, y, z;
+        
+        if(direction === DIRECTION_RIGHT_TO_LEFT) {
+            x = targetStartX + -targetSpeed * elapsed;
+            y = targetHeight;
+            z = targetStartY;
+        }
+        else if(direction === DIRECTION_LEFT_TO_RIGHT) {
+            x = targetStartX + targetSpeed * elapsed;
+            y = targetHeight;
+            z = targetStartY;
+        }
+        else {
+            x = targetStartX;
+            y = targetHeight;
+            z = targetStartY + -targetSpeed * elapsed;
+        }
 
         if(!missileHit) {
             view.target.position.set(x, y, z);
-            view.targetSpeed = Math.abs(speed);
+            view.targetSpeed = Math.abs(targetSpeed);
         }
     }
     var animateMissile = function (view, delta) {
@@ -340,9 +390,25 @@ $(function () {
     };
     
     
-    $("#lead-key-q").addClass("selected-lead");
-    xLead = 10;
-    yLead = 10;
+    if(direction === DIRECTION_RIGHT_TO_LEFT) {
+        $("#lead-key-q").addClass("selected-lead");
+        xLead = 10;
+        yLead = 10;
+    }
+    else if(direction === DIRECTION_LEFT_TO_RIGHT) {
+        $("#lead-key-e").addClass("selected-lead");
+        xLead = -10;
+        yLead = 10;
+    }
+    else {
+        $("#lead-key-w").addClass("selected-lead");
+        xLead = 0;
+        yLead = 10;
+    }
+    
+    $("#restart-button").click(function() {
+       location.reload(); 
+    });
     
     /**
      * To apply lead and super-elevation
