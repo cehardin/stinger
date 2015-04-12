@@ -2,7 +2,7 @@
 var wireframe = false;
 var dimensionsLength = 200000;
 var gravityImpulse = -9.81;
-var motorImpulse = 300.0;
+var motorImpulse = 350.0;
 var maxMotorOnTime = 3;
 var DIRECTION_RIGHT_TO_LEFT = "RIGHT_TO_LEFT";
 var DIRECTION_LEFT_TO_RIGHT = "LEFT_TO_RIGHT";
@@ -344,20 +344,39 @@ $(function () {
         var targetAltitude = Math.floor(targetPosition.y);
         var framesPerSecond = Math.round(1.0 / averageDelta);
         var targetSpeed = Math.floor(view.targetSpeed);
-        
+        var metersToFeet = function(meters) {
+          return meters * 3.2808399;  
+        };
+        var metersPerSecondToMilesPerHour = function(metersPerSecond) {
+            var feetPerSecond = metersToFeet(metersPerSecond);
+            var feetPerMinute = feetPerSecond * 60;
+            var feetPerHour = feetPerMinute * 60;
+            
+            return feetPerHour * 0.00018939;
+        }
+        var distanceText = function(meters) {
+            var feet = Math.floor(metersToFeet(meters));
+            return meters + " m. | " + feet +" ft.";
+        };
+        var speedText = function(metersPerSecond) {
+            var milesPerHour = Math.floor(metersPerSecondToMilesPerHour(metersPerSecond));
+            return metersPerSecond + " meters/second | " + milesPerHour + " mph";
+        };
         if(launchMissile && distanceToTarget < 10) {
             missileHit = true;
         }
+        
+        
         minimumDistance = Math.min(minimumDistance, distanceToTarget);
         
-        $("#missile-altitude").text(missileAltitude);
-        $("#missile-speed").text(missileSpeed);
+        $("#missile-altitude").text(distanceText(missileAltitude));
+        $("#missile-speed").text(speedText(missileSpeed));
         
-        $("#missile-distance-launcher").text(distanceToLauncer);
-        $("#missile-distance-target").text(distanceToTarget);
+        $("#missile-distance-launcher").text(distanceText(distanceToLauncer));
+        $("#missile-distance-target").text(distanceText(distanceToTarget));
         
-        $("#target-altitude").text(targetAltitude);
-        $("#target-speed").text(targetSpeed);
+        $("#target-altitude").text(distanceText(targetAltitude));
+        $("#target-speed").text(speedText(targetSpeed));
         
         $("#missile-flight-time").text(missileFlightTime);
         $("#frames-per-second").text(framesPerSecond);
